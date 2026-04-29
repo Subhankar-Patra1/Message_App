@@ -1,0 +1,64 @@
+name: Elixir CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: broker_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Elixir
+      uses: erlef/setup-beam@v1
+      with:
+        elixir-version: '1.15.4'
+        otp-version: '26.0'
+    
+    - name: Restore dependencies cache
+      uses: actions/cache@v3
+      with:
+        path: broker/deps
+        key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+        restore-keys: ${{ runner.os }}-mix-
+        
+    - name: Install dependencies
+      run: mix deps.get
+      working-directory: ./broker
+      
+    - name: Run Code Formatter
+      run: mix format --check-formatted
+      working-directory: ./broker
+      
+    - name: Run mix compile
+      run: mix compile --warnings-as-errors
+      working-directory: ./broker
+      
+    - name: Run mix audit
+      run: mix audit || true
+      working-directory: ./broker
+      
+    - name: Run tests
+      run: mix test
+      working-directory: ./broker
+      env:
+        MIX_ENV: test

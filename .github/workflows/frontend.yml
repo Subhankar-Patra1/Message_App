@@ -1,0 +1,33 @@
+name: Flutter CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    - uses: subosito/flutter-action@v2
+      with:
+        channel: 'stable'
+        
+    - name: Install dependencies
+      run: flutter pub get
+      working-directory: ./client
+      
+    - name: Analyze project source
+      run: flutter analyze
+      working-directory: ./client
+      
+    - name: Run tests
+      run: flutter test
+      working-directory: ./client
+      
+    - name: Run dart pub audit
+      run: dart pub audit || dart pub outdated --mode=security || true
+      working-directory: ./client

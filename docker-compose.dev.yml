@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  broker:
+    build:
+      context: ./broker
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./broker:/app
+    ports:
+      - "4000:4000"
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      - MIX_ENV=dev
+      - DATABASE_URL=ecto://postgres:password@postgres/broker_dev
+
+  client:
+    image: cirrusci/flutter:stable
+    volumes:
+      - ./client:/app
+    working_dir: /app

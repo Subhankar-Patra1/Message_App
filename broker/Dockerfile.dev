@@ -1,0 +1,10 @@
+FROM elixir:1.15-alpine
+
+RUN apk add --no-cache build-base git inotify-tools
+
+# Install hex + rebar
+RUN mix local.hex --force && \
+    mix local.rebar --force
+
+WORKDIR /app
+CMD ["mix", "phx.server"]

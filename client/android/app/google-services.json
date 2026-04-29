@@ -1,0 +1,34 @@
+{
+  "project_info": {
+    "project_number": "132565546749",
+    "project_id": "messenger-bd0f5",
+    "storage_bucket": "messenger-bd0f5.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:132565546749:android:3fa9857bd9b9b79988b094",
+        "android_client_info": {
+          "package_name": "com.aura.chat"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "132565546749-7fjpe9g1ekrtnvjri1dlk2034vmgf2r4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCMTdUct-RaYfAZopUqlIarxPf0PEul4Wc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
