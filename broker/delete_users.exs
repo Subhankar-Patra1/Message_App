@@ -5,7 +5,7 @@ alias Broker.Accounts.Device
 alias Broker.Keys.PreKey
 alias Broker.Keys.SignedPreKey
 
-keep_emails = ["rupsa1728@gmail.com", "noreply.iemconnect@gmail.com"]
+keep_emails = []
 
 # Find users to delete
 users_to_delete = Repo.all(from u in User, where: u.email not in ^keep_emails)

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Network security config for AuraChat.
+
+    In DEBUG builds: Allow cleartext HTTP to local development servers.
+    In RELEASE builds: Only HTTPS is allowed (this file won't apply if
+    you use a production domain with TLS).
+
+    This is the standard approach used by all Android apps during development.
+    Signal, WhatsApp, etc. also use this pattern.
+-->
+<network-security-config>
+    <!-- Allow cleartext to local dev server only -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">192.168.2.69</domain>
+        <domain includeSubdomains="true">10.0.2.2</domain>  <!-- Android emulator localhost -->
+        <domain includeSubdomains="true">localhost</domain>
+    </domain-config>
+</network-security-config>
