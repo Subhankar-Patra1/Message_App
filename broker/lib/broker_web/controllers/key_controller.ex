@@ -10,25 +10,29 @@ defmodule BrokerWeb.KeyController do
   action_fallback BrokerWeb.FallbackController
 
   defp full_avatar_url(_conn, nil), do: nil
+
   defp full_avatar_url(conn, "/" <> _ = path) do
     %{scheme: scheme, host: host, port: port} = conn
     base = "#{scheme || "http"}://#{host}#{if port in [80, 443, nil], do: "", else: ":#{port}"}"
     "#{base}#{path}"
   end
+
   defp full_avatar_url(_conn, url), do: url
 
   # Plugs for scopes and rate limiting
   plug BrokerWeb.Plugs.RequireScope,
        "keys:register" when action in [:register, :rotate_signed_pre_key]
 
-  plug BrokerWeb.Plugs.RequireScope, "pre_keys:fetch" when action in [:fetch_bundle, :fetch_by_username, :fetch_by_identifier]
+  plug BrokerWeb.Plugs.RequireScope,
+       "pre_keys:fetch" when action in [:fetch_bundle, :fetch_by_username, :fetch_by_identifier]
 
   plug BrokerWeb.Plugs.RateLimit,
        [action: "register_keys", scale_ms: 300_000, limit: 10]
        when action in [:register, :rotate_signed_pre_key]
 
   plug BrokerWeb.Plugs.RateLimit,
-       [action: "fetch_keys", scale_ms: 60_000, limit: 30] when action in [:fetch_bundle, :fetch_by_username, :fetch_by_identifier]
+       [action: "fetch_keys", scale_ms: 60_000, limit: 30]
+       when action in [:fetch_bundle, :fetch_by_username, :fetch_by_identifier]
 
   def register(conn, params) do
     with :ok <- check_version(params),
@@ -70,7 +74,7 @@ defmodule BrokerWeb.KeyController do
 
   def fetch_by_username(conn, %{"username" => username} = params) do
     user_id = conn.assigns.current_user_id
-    
+
     case Repo.get_by(User, username: username) do
       nil ->
         conn |> put_status(:not_found) |> json(%{error: "user_not_found"})
@@ -91,6 +95,7 @@ defmodule BrokerWeb.KeyController do
             end
 
           display_name = String.trim("#{user.first_name || ""} #{user.last_name || ""}")
+
           profile_data = %{
             "user_id" => user.id,
             "first_name" => user.first_name,
@@ -121,7 +126,8 @@ defmodule BrokerWeb.KeyController do
     end
   end
 
-  def fetch_by_username(conn, _), do: conn |> put_status(400) |> json(%{error: "missing_username"})
+  def fetch_by_username(conn, _),
+    do: conn |> put_status(400) |> json(%{error: "missing_username"})
 
   @doc """
   GET /api/v1/keys/fetch_by_identifier?identifier=...
@@ -154,15 +160,24 @@ defmodule BrokerWeb.KeyController do
         else
           case execute_fetch_transaction(found_user.id, user_id) do
             {:ok, bundle} ->
-              display_name = String.trim("#{found_user.first_name || ""} #{found_user.last_name || ""}")
-              
-              bundle_with_id = bundle
+              display_name =
+                String.trim("#{found_user.first_name || ""} #{found_user.last_name || ""}")
+
+              bundle_with_id =
+                bundle
                 |> Map.put("user_id", found_user.id)
                 |> Map.put("first_name", found_user.first_name)
                 |> Map.put("last_name", found_user.last_name)
-                |> Map.put("display_name", if(display_name == "", do: found_user.username || identifier, else: display_name))
+                |> Map.put(
+                  "display_name",
+                  if(display_name == "",
+                    do: found_user.username || identifier,
+                    else: display_name
+                  )
+                )
                 |> Map.put("avatar_url", full_avatar_url(conn, found_user.avatar_url))
                 |> Map.put("username", found_user.username)
+
               json(conn, bundle_with_id)
 
             {:error, reason} ->
@@ -172,7 +187,8 @@ defmodule BrokerWeb.KeyController do
     end
   end
 
-  def fetch_by_identifier(conn, _), do: conn |> put_status(400) |> json(%{error: "missing_identifier"})
+  def fetch_by_identifier(conn, _),
+    do: conn |> put_status(400) |> json(%{error: "missing_identifier"})
 
   defp hash_phone(phone) do
     secret = Application.get_env(:broker, :phone_hash_secret)

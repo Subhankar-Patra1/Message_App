@@ -51,13 +51,13 @@ defmodule BrokerWeb.Router do
     put "/account/profile", UserController, :update_profile
     put "/account/username", UserController, :set_username
     delete "/account", AuthController, :delete_account
-    
+
     # Username Key Lookup
     get "/keys/fetch_by_username/:username", KeyController, :fetch_by_username
 
     # Phone/Email Key Lookup
     get "/keys/fetch_by_identifier", KeyController, :fetch_by_identifier
-    
+
     # User Status
     get "/account/status/:user_id", UserController, :get_status
 

@@ -47,13 +47,13 @@ defmodule Broker.Chat.OfflineQueue do
 
   def drain_page(user_id, offset, limit) do
     queue_key = "offline_msgs:#{user_id}"
-    
+
     # +1 to limit to check if there are more
     case Redix.command(:redix, ["LRANGE", queue_key, offset, offset + limit - 1]) do
       {:ok, messages} ->
         has_more = length(messages) == limit
         {:ok, Enum.map(messages, &Jason.decode!/1), has_more}
-        
+
       error ->
         error
     end

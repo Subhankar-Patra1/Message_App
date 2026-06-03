@@ -6,11 +6,13 @@ defmodule BrokerWeb.UserController do
 
   # Build a full URL for avatar paths stored as "/uploads/xxx.jpg"
   defp full_avatar_url(_conn, nil), do: nil
+
   defp full_avatar_url(conn, "/" <> _ = path) do
     %{scheme: scheme, host: host, port: port} = conn
     base = "#{scheme || "http"}://#{host}#{if port in [80, 443, nil], do: "", else: ":#{port}"}"
     "#{base}#{path}"
   end
+
   defp full_avatar_url(_conn, url), do: url
 
   # GET /api/v1/account/check_username?username=...
@@ -72,11 +74,12 @@ defmodule BrokerWeb.UserController do
         })
 
       {:error, changeset} ->
-        errors = Ecto.Changeset.traverse_errors(changeset, fn {msg, opts} ->
-          Regex.replace(~r"%{(\w+)}", msg, fn _, key ->
-            opts |> Keyword.get(String.to_existing_atom(key), key) |> to_string()
+        errors =
+          Ecto.Changeset.traverse_errors(changeset, fn {msg, opts} ->
+            Regex.replace(~r"%{(\w+)}", msg, fn _, key ->
+              opts |> Keyword.get(String.to_existing_atom(key), key) |> to_string()
+            end)
           end)
-        end)
 
         conn
         |> put_status(:unprocessable_entity)
@@ -119,11 +122,12 @@ defmodule BrokerWeb.UserController do
         })
 
       {:error, changeset} ->
-        errors = Ecto.Changeset.traverse_errors(changeset, fn {msg, opts} ->
-          Regex.replace(~r"%{(\w+)}", msg, fn _, key ->
-            opts |> Keyword.get(String.to_existing_atom(key), key) |> to_string()
+        errors =
+          Ecto.Changeset.traverse_errors(changeset, fn {msg, opts} ->
+            Regex.replace(~r"%{(\w+)}", msg, fn _, key ->
+              opts |> Keyword.get(String.to_existing_atom(key), key) |> to_string()
+            end)
           end)
-        end)
 
         conn
         |> put_status(:unprocessable_entity)
@@ -158,6 +162,7 @@ defmodule BrokerWeb.UserController do
     last_seen_at =
       if !is_online do
         user = Repo.get(User, user_id)
+
         if user && user.last_seen_at do
           DateTime.to_iso8601(user.last_seen_at)
         else

@@ -65,6 +65,7 @@ defmodule BrokerWeb.ChatChannel do
 
   defp drain_batch(socket, offset) do
     user_id = socket.assigns.user_id
+
     case OfflineQueue.drain_page(user_id, offset, 50) do
       {:ok, messages, has_more} ->
         valid_messages =
@@ -94,11 +95,11 @@ defmodule BrokerWeb.ChatChannel do
       raw_recipient_id = payload["recipient_user_id"]
       recipient_id = normalize_id(raw_recipient_id)
       user_id = socket.assigns.user_id
-      
+
       server_ts = System.system_time(:millisecond)
       seq = next_seq(user_id, recipient_id)
-      
-      payload_with_ts = 
+
+      payload_with_ts =
         payload
         |> Map.put("server_ts", server_ts)
         |> Map.put("seq", seq)
@@ -130,8 +131,7 @@ defmodule BrokerWeb.ChatChannel do
             )
           end
 
-          {:reply, {:ok, %{status: "delivered", server_ts: server_ts, seq: seq}},
-           socket}
+          {:reply, {:ok, %{status: "delivered", server_ts: server_ts, seq: seq}}, socket}
 
         error ->
           Logger.error("Failed to write to offline queue: #{inspect(error)}")
@@ -201,13 +201,21 @@ defmodule BrokerWeb.ChatChannel do
 
   def handle_in("typing", %{"recipient_id" => recipient_id}, socket) do
     user_id = socket.assigns.user_id
-    BrokerWeb.Endpoint.broadcast("encrypted_chat:#{recipient_id}", "typing_start", %{"user_id" => user_id})
+
+    BrokerWeb.Endpoint.broadcast("encrypted_chat:#{recipient_id}", "typing_start", %{
+      "user_id" => user_id
+    })
+
     {:reply, :ok, socket}
   end
 
   def handle_in("stop_typing", %{"recipient_id" => recipient_id}, socket) do
     user_id = socket.assigns.user_id
-    BrokerWeb.Endpoint.broadcast("encrypted_chat:#{recipient_id}", "typing_stop", %{"user_id" => user_id})
+
+    BrokerWeb.Endpoint.broadcast("encrypted_chat:#{recipient_id}", "typing_stop", %{
+      "user_id" => user_id
+    })
+
     {:reply, :ok, socket}
   end
 
@@ -219,10 +227,12 @@ defmodule BrokerWeb.ChatChannel do
 
   def handle_in("read_cursor", %{"sender_id" => sender_id, "last_read_seq" => seq}, socket) do
     user_id = socket.assigns.user_id
+
     BrokerWeb.Endpoint.broadcast("encrypted_chat:#{sender_id}", "read_cursor", %{
       "reader_id" => user_id,
       "last_read_seq" => seq
     })
+
     {:reply, :ok, socket}
   end
 
@@ -264,7 +274,8 @@ defmodule BrokerWeb.ChatChannel do
          "msg_id" => _,
          "ciphertext" => _,
          "sender_device_id" => _
-       }), do: :ok
+       }),
+       do: :ok
 
   defp validate_group_message_schema(_), do: {:error, "invalid_schema"}
 
@@ -310,12 +321,15 @@ defmodule BrokerWeb.ChatChannel do
 
   def terminate(_reason, socket) do
     user_id = socket.assigns.user_id
+
     if user_id do
       # Update last seen at
       now = DateTime.utc_now() |> DateTime.truncate(:second)
+
       from(u in Broker.Accounts.User, where: u.id == ^user_id)
       |> Broker.Repo.update_all(set: [last_seen_at: now])
     end
+
     :ok
   end
 end

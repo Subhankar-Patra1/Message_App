@@ -53,6 +53,17 @@ defmodule BrokerWeb.Endpoint do
   plug Plug.MethodOverride
   plug Plug.Head
   plug Plug.Session, @session_options
-  plug CORSPlug, headers: ["idempotency-key", "authorization", "content-type", "accept", "origin", "user-agent", "x-requested-with"]
+
+  plug CORSPlug,
+    headers: [
+      "idempotency-key",
+      "authorization",
+      "content-type",
+      "accept",
+      "origin",
+      "user-agent",
+      "x-requested-with"
+    ]
+
   plug BrokerWeb.Router
 end
