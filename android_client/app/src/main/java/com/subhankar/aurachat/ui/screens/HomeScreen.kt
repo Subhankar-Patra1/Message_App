@@ -2,6 +2,7 @@ package com.subhankar.aurachat.ui.screens
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -9,6 +10,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.indication
+import androidx.compose.foundation.LocalIndication
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.Edit
@@ -24,6 +28,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -83,7 +88,7 @@ fun HomeScreen(
                 containerColor = AuraColors.Primary,
                 contentColor = AuraColors.Background,
                 shape = RoundedCornerShape(18.dp),
-                modifier = Modifier.padding(bottom = 60.dp)
+                modifier = Modifier.padding(bottom = 84.dp)
             ) {
                 Icon(Icons.Default.Edit, "New Chat", modifier = Modifier.size(20.dp))
                 Spacer(Modifier.width(8.dp))
@@ -96,13 +101,22 @@ fun HomeScreen(
             }
         },
         bottomBar = {
-            BottomNavBar(
-                selectedIndex = selectedTab,
-                onTabSelected = { index ->
-                    if (index == 2) onProfileClick()
-                    else selectedTab = index
-                }
-            )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .navigationBarsPadding()
+                    .padding(bottom = 16.dp, start = 24.dp, end = 24.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                BottomNavBar(
+                    selectedIndex = selectedTab,
+                    totalUnreadCount = conversations.sumOf { it.unreadCount },
+                    onTabSelected = { index ->
+                        if (index == 3) onProfileClick()
+                        else selectedTab = index
+                    }
+                )
+            }
         }
     ) { paddingValues ->
         if (conversations.isEmpty()) {
@@ -110,7 +124,7 @@ fun HomeScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(paddingValues),
+                    .padding(top = paddingValues.calculateTopPadding(), bottom = 90.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -130,9 +144,11 @@ fun HomeScreen(
             }
         } else {
             LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(
+                    top = paddingValues.calculateTopPadding(),
+                    bottom = 100.dp
+                )
             ) {
                 itemsIndexed(conversations) { index, chat ->
                     ChatTile(
@@ -242,22 +258,84 @@ private fun ChatTile(
 @Composable
 private fun BottomNavBar(
     selectedIndex: Int,
+    totalUnreadCount: Int,
     onTabSelected: (Int) -> Unit
 ) {
-    Column {
-        HorizontalDivider(thickness = 1.dp, color = AuraColors.Divider)
-
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(68.dp),
+        shape = RoundedCornerShape(32.dp),
+        color = Color(0xFF1E2025).copy(alpha = 0.85f),
+        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.08f)),
+        tonalElevation = 8.dp
+    ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(90.dp)
-                .background(AuraColors.Background),
+            modifier = Modifier.fillMaxSize(),
             horizontalArrangement = Arrangement.SpaceAround,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            NavItem(0, selectedIndex, Icons.Outlined.Chat, Icons.Filled.Chat, "Chats", onTabSelected)
-            NavItem(1, selectedIndex, Icons.Outlined.Phone, Icons.Filled.Phone, "Calls", onTabSelected)
-            NavItem(2, selectedIndex, Icons.Outlined.Person, Icons.Filled.Person, "Profile", onTabSelected)
+            NavItem(
+                index = 0,
+                selectedIndex = selectedIndex,
+                label = "Chats",
+                badgeCount = totalUnreadCount,
+                onTap = onTabSelected
+            ) { tint ->
+                Icon(
+                    painter = painterResource(id = com.subhankar.aurachat.R.drawable.chatbubbles),
+                    contentDescription = "Chats",
+                    tint = tint,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+            NavItem(
+                index = 1,
+                selectedIndex = selectedIndex,
+                label = "Moments",
+                badgeCount = 0,
+                onTap = onTabSelected
+            ) { tint ->
+                val momentsIcon = if (selectedIndex == 1) {
+                    com.subhankar.aurachat.R.drawable.ic_moments_filled
+                } else {
+                    com.subhankar.aurachat.R.drawable.ic_moments_outlined
+                }
+                Icon(
+                    painter = painterResource(id = momentsIcon),
+                    contentDescription = "Moments",
+                    tint = tint,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+            NavItem(
+                index = 2,
+                selectedIndex = selectedIndex,
+                label = "Calls",
+                badgeCount = 0,
+                onTap = onTabSelected
+            ) { tint ->
+                Icon(
+                    imageVector = if (selectedIndex == 2) Icons.Filled.Phone else Icons.Outlined.Phone,
+                    contentDescription = "Calls",
+                    tint = tint,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+            NavItem(
+                index = 3,
+                selectedIndex = selectedIndex,
+                label = "Profile",
+                badgeCount = 0,
+                onTap = onTabSelected
+            ) { tint ->
+                Icon(
+                    imageVector = if (selectedIndex == 3) Icons.Filled.Person else Icons.Outlined.Person,
+                    contentDescription = "Profile",
+                    tint = tint,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
         }
     }
 }
@@ -266,10 +344,10 @@ private fun BottomNavBar(
 private fun NavItem(
     index: Int,
     selectedIndex: Int,
-    outlineIcon: ImageVector,
-    filledIcon: ImageVector,
     label: String,
-    onTap: (Int) -> Unit
+    badgeCount: Int,
+    onTap: (Int) -> Unit,
+    icon: @Composable (tint: Color) -> Unit
 ) {
     val isSelected = index == selectedIndex
     val iconColor by animateColorAsState(
@@ -280,35 +358,51 @@ private fun NavItem(
         targetValue = if (isSelected) AuraColors.Primary.copy(alpha = 0.15f) else Color.Transparent,
         animationSpec = tween(200), label = "navBgColor"
     )
+    val interactionSource = remember { MutableInteractionSource() }
 
     Column(
         modifier = Modifier
-            .clickable { onTap(index) }
-            .padding(horizontal = 12.dp),
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null
+            ) { onTap(index) }
+            .padding(horizontal = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(4.dp))
         Box(
             modifier = Modifier
-                .clip(RoundedCornerShape(20.dp))
+                .clip(RoundedCornerShape(18.dp))
                 .background(bgColor)
-                .padding(horizontal = 20.dp, vertical = 4.dp)
+                .indication(interactionSource, LocalIndication.current)
+                .padding(horizontal = 16.dp, vertical = 4.dp)
         ) {
-            Icon(
-                if (isSelected) filledIcon else outlineIcon,
-                label,
-                tint = iconColor,
-                modifier = Modifier.size(26.dp)
-            )
+            icon(iconColor)
+            if (badgeCount > 0) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .offset(x = 8.dp, y = (-4).dp)
+                        .background(Color(0xFF2C6BED), CircleShape)
+                        .padding(horizontal = 5.dp, vertical = 1.dp)
+                ) {
+                    Text(
+                        text = badgeCount.toString(),
+                        color = Color.White,
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
         }
-        Spacer(Modifier.height(4.dp))
+        Spacer(Modifier.height(2.dp))
         Text(
             label,
             color = iconColor,
-            fontSize = 11.sp,
+            fontSize = 10.sp,
             fontWeight = if (isSelected) FontWeight.W600 else FontWeight.W400
         )
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(4.dp))
     }
 }
 

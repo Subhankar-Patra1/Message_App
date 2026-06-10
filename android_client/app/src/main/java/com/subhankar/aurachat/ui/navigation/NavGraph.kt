@@ -251,6 +251,37 @@ fun AuraChatNavGraph(
                 profileData = uiState.profileData,
                 isLoading = uiState.isLoading,
                 error = uiState.error,
+                firstName = uiState.firstName,
+                lastName = uiState.lastName,
+                bio = uiState.bio,
+                phone = uiState.phone,
+                username = uiState.username,
+                birthday = uiState.birthday,
+                profilePhotoUri = uiState.profilePhotoUri,
+                textAvatarText = uiState.textAvatarText,
+                textAvatarBgIndex = uiState.textAvatarBgIndex,
+                textAvatarTextColorIndex = uiState.textAvatarTextColorIndex,
+                isSaving = uiState.isSaving,
+                isLoggedOut = uiState.isLoggedOut,
+                hasChanges = viewModel.hasChanges(),
+                onFirstNameChange = { viewModel.updateFirstName(it) },
+                onLastNameChange = { viewModel.updateLastName(it) },
+                onBioChange = { viewModel.updateBio(it) },
+                onPhoneChange = { viewModel.updatePhone(it) },
+                onUsernameChange = { viewModel.updateUsername(it) },
+                onBirthdayChange = { viewModel.updateBirthday(it) },
+                onProfilePhotoChange = { viewModel.updateProfilePhotoUri(it) },
+                onTextAvatarStateChange = { text, bgIdx, textColIdx ->
+                    viewModel.updateTextAvatarState(text, bgIdx, textColIdx)
+                },
+                onLogoutClick = { viewModel.logout() },
+                onLogoutSuccess = {
+                    navController.navigate(Routes.WELCOME) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
+                onSaveClick = { onSuccess -> viewModel.saveAllChanges(onSuccess) },
+                onDiscardClick = { viewModel.discardChanges() },
                 onBackClick = { navController.popBackStack() }
             )
         }

@@ -8,7 +8,7 @@ package com.subhankar.aurachat.network
  */
 object AppConfig {
     // Change this IP to your machine's local IP for development
-    var serverIp: String = "192.168.2.69"
+    var serverIp: String = "10.24.82.109"
 
     val apiBaseUrl: String get() = "http://$serverIp:4000"
     val socketUrl: String get() = "ws://$serverIp:4000"

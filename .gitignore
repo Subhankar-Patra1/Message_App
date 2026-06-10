@@ -6,3 +6,5 @@
 broker/priv/*.json
 *.jks
 *.keystore
+client/
+Signal-Android/
