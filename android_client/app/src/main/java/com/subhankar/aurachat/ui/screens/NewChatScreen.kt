@@ -14,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.zIndex
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -45,7 +46,9 @@ fun NewChatScreen(
     onContactClick: (ContactItem) -> Unit = {}
 ) {
     Scaffold(
+        modifier = Modifier.fillMaxSize().zIndex(2f),
         containerColor = AuraColors.Background,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
                 title = {
@@ -62,7 +65,7 @@ fun NewChatScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = AuraColors.Background
+                    containerColor = AuraColors.AppBarBackground
                 )
             )
         }

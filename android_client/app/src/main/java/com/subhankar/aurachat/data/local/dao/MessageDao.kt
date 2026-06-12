@@ -26,8 +26,8 @@ interface MessageDao {
         SELECT * FROM messages 
         WHERE chat_id = :chatId 
         ORDER BY 
-            CASE WHEN seq IS NOT NULL THEN seq ELSE 999999999 END ASC, 
-            timestamp ASC
+            CASE WHEN seq IS NOT NULL THEN seq ELSE 999999999 END DESC, 
+            timestamp DESC
     """)
     fun getMessagesForChat(chatId: String): Flow<List<MessageEntity>>
 

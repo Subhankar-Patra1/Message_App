@@ -13,9 +13,10 @@ import androidx.compose.ui.graphics.Color
  */
 object AuraColors {
     // Core background
-    val Background = Color(0xFF111318)
+    val Background = Color(0xFF141518)
     val Surface = Color(0xFF1A1B21)
     val SurfaceVariant = Color(0xFF212121)
+    val AppBarBackground = Color(0xFF141518)
 
     // Primary accent (lavender)
     val Primary = Color(0xFFC3C0FF)
@@ -23,6 +24,7 @@ object AuraColors {
 
     // Chat bubbles
     val SentBubble = Color(0xFF2C6BED)
+    val LightBlue = Color(0xFF4C8CFF)
     val ReceivedBubble = Color(0xFF212121)
 
     // Text

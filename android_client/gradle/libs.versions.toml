@@ -21,6 +21,7 @@ securityCrypto = "1.1.0-alpha06"
 credentials = "1.5.0-rc01"
 googleId = "1.1.1"
 camerax = "1.4.1"
+vanniktechEmoji = "0.24.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -61,6 +62,7 @@ androidx-camera-core = { group = "androidx.camera", name = "camera-core", versio
 androidx-camera-camera2 = { group = "androidx.camera", name = "camera-camera2", version.ref = "camerax" }
 androidx-camera-lifecycle = { group = "androidx.camera", name = "camera-lifecycle", version.ref = "camerax" }
 androidx-camera-view = { group = "androidx.camera", name = "camera-view", version.ref = "camerax" }
+emoji-ios = { group = "com.vanniktech", name = "emoji-ios", version.ref = "vanniktechEmoji" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -15,6 +15,7 @@ import com.subhankar.aurachat.network.ConnectionManager
 import com.subhankar.aurachat.network.PhoenixSocketManager
 import java.time.Instant
 import java.util.UUID
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -50,6 +51,8 @@ class ChatRepository @Inject constructor(
     private val conversationDao: ConversationDao,
     private val contactDao: ContactDao
 ) {
+    private val repositoryScope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO)
+
     companion object {
         private const val TAG = "ChatRepository"
     }
@@ -102,6 +105,67 @@ class ChatRepository @Inject constructor(
         val finalMsgId = msgId ?: UUID.randomUUID().toString()
         val myUserId = sessionManager.getUserId() ?: throw IllegalStateException("Not logged in")
 
+        if (recipientId == "dummy_user_123") {
+            // Save user message to local DB immediately as READ
+            val message = MessageEntity(
+                msgId = finalMsgId,
+                chatId = recipientId,
+                senderId = myUserId,
+                text = plaintext,
+                timestamp = Instant.now().toString(),
+                isMe = true,
+                status = MessageStatus.READ
+            )
+            messageDao.insert(message)
+
+            // Update conversation summary
+            conversationDao.upsert(
+                ConversationEntity(
+                    userId = recipientId,
+                    name = "AuraChat Assistant",
+                    avatarUrl = null,
+                    lastMessage = plaintext,
+                    lastMessageTime = Instant.now().toString(),
+                    unreadCount = 0
+                )
+            )
+
+            // Simulate reply from the assistant in the background
+            /*
+            repositoryScope.launch {
+                try {
+                    kotlinx.coroutines.delay(1000)
+                    val responseText = getAssistantResponse(plaintext)
+                    val responseMsgId = UUID.randomUUID().toString()
+                    val responseMessage = MessageEntity(
+                        msgId = responseMsgId,
+                        chatId = recipientId,
+                        senderId = recipientId,
+                        text = responseText,
+                        timestamp = Instant.now().toString(),
+                        isMe = false,
+                        status = MessageStatus.READ
+                    )
+                    messageDao.insert(responseMessage)
+
+                    conversationDao.upsert(
+                        ConversationEntity(
+                            userId = recipientId,
+                            name = "AuraChat Assistant",
+                            avatarUrl = null,
+                            lastMessage = responseText,
+                            lastMessageTime = Instant.now().toString(),
+                            unreadCount = 0
+                        )
+                    )
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+            */
+            return finalMsgId
+        }
+
         // Save to local DB immediately — appears in chat with pending status
         val message = MessageEntity(
             msgId = finalMsgId,
@@ -135,6 +199,24 @@ class ChatRepository @Inject constructor(
         )
 
         return finalMsgId
+    }
+
+    private fun getAssistantResponse(input: String): String {
+        val lower = input.lowercase().trim()
+        return when {
+            lower.contains("hello") || lower.contains("hi") || lower.contains("hey") -> {
+                "Hello there! I am your AuraChat Assistant. How can I help you customize your chat screen today?"
+            }
+            lower.contains("color") || lower.contains("theme") || lower.contains("custom") -> {
+                "AuraChat has premium colors built-in! Tell me which colors or fonts you want to customize on the Chat screen."
+            }
+            lower.contains("help") -> {
+                "I can assist with testing messages, checking bubble layouts, and validating styling. Just type anything here!"
+            }
+            else -> {
+                "Awesome! You typed: \"$input\". Tell me how you want to design or customize this chat bubble interface."
+            }
+        }
     }
 
     /**

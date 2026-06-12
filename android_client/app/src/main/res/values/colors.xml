@@ -7,4 +7,15 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="core_grey_60">#5E5E5E</color>
+    <color name="signal_icon_tint_primary">#FAFAFA</color>
+
+    <!-- Emoji Picker styling overrides (both legacy and unified names) -->
+    <color name="emoji_icons">#8AFFFFFF</color>
+    <color name="emoji_primary_color">#8AFFFFFF</color>
+    <color name="emoji_secondary_color">#C3C0FF</color>
+    <color name="emoji_background">#141518</color>
+    <color name="emoji_background_color">#141518</color>
+    <color name="emoji_divider">#1AFFFFFF</color>
+    <color name="emoji_divider_color">#1AFFFFFF</color>
 </resources>

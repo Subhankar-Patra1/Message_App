@@ -3,6 +3,7 @@ package com.subhankar.aurachat.ui.screens
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -13,6 +14,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.indication
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.Edit
@@ -28,19 +30,27 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.zIndex
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.subhankar.aurachat.data.local.entity.ConversationEntity
 import com.subhankar.aurachat.ui.theme.AuraColors
+import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import kotlinx.coroutines.launch
 
 /**
  * Home Screen — exact translation of your Flutter home_screen.dart.
@@ -49,6 +59,7 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun HomeScreen(
     conversations: List<ConversationEntity>,
+    profilePhotoPath: String?,
     onChatClick: (ConversationEntity) -> Unit,
     onNewChatClick: () -> Unit,
     onProfileClick: () -> Unit
@@ -56,7 +67,9 @@ fun HomeScreen(
     var selectedTab by remember { mutableIntStateOf(0) }
 
     Scaffold(
+        modifier = Modifier.fillMaxSize().zIndex(1f),
         containerColor = AuraColors.Background,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
                 title = {
@@ -65,6 +78,10 @@ fun HomeScreen(
                         color = Color.White,
                         fontSize = 21.sp,
                         fontWeight = FontWeight.W600,
+                        fontFamily = RobotoFontFamily,
+                        style = LocalTextStyle.current.copy(
+                            fontFamily = RobotoFontFamily
+                        ),
                         letterSpacing = (-0.5).sp
                     )
                 },
@@ -78,25 +95,25 @@ fun HomeScreen(
                     Spacer(Modifier.width(4.dp))
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = AuraColors.Background.copy(alpha = 0.9f)
+                    containerColor = AuraColors.AppBarBackground
                 )
             )
         },
         floatingActionButton = {
-            ExtendedFloatingActionButton(
+            FloatingActionButton(
                 onClick = onNewChatClick,
-                containerColor = AuraColors.Primary,
-                contentColor = AuraColors.Background,
-                shape = RoundedCornerShape(18.dp),
-                modifier = Modifier.padding(bottom = 84.dp)
+                containerColor = AuraColors.LightBlue,
+                contentColor = Color.White,
+                shape = CircleShape,
+                elevation = FloatingActionButtonDefaults.elevation(0.dp),
+                modifier = Modifier
+                    .padding(bottom = 8.dp, end = 12.dp)
+                    .size(48.dp)
             ) {
-                Icon(Icons.Default.Edit, "New Chat", modifier = Modifier.size(20.dp))
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    "New Chat",
-                    fontWeight = FontWeight.W600,
-                    fontSize = 13.5.sp,
-                    letterSpacing = 0.1.sp
+                Icon(
+                    painter = painterResource(id = com.subhankar.aurachat.R.drawable.ic_new_message),
+                    contentDescription = "New Message",
+                    modifier = Modifier.size(32.dp)
                 )
             }
         },
@@ -105,12 +122,13 @@ fun HomeScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .navigationBarsPadding()
-                    .padding(bottom = 16.dp, start = 24.dp, end = 24.dp),
+                    .padding(bottom = 6.dp, start = 12.dp, end = 12.dp),
                 contentAlignment = Alignment.Center
             ) {
                 BottomNavBar(
                     selectedIndex = selectedTab,
                     totalUnreadCount = conversations.sumOf { it.unreadCount },
+                    profilePhotoPath = profilePhotoPath,
                     onTabSelected = { index ->
                         if (index == 3) onProfileClick()
                         else selectedTab = index
@@ -180,11 +198,30 @@ private fun ChatTile(
 ) {
     val hasUnread = conversation.unreadCount > 0
     val displayName = if (looksLikeUuid(conversation.name)) "Unknown" else conversation.name
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    
+    var isClickHighlighted by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+    
+    val showHighlight = isPressed || isClickHighlighted
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .background(if (showHighlight) Color.White.copy(alpha = 0.08f) else Color.Transparent)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = {
+                    isClickHighlighted = true
+                    coroutineScope.launch {
+                        kotlinx.coroutines.delay(20)
+                        isClickHighlighted = false
+                    }
+                    onClick()
+                }
+            )
             .padding(horizontal = 16.dp, vertical = 9.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -259,23 +296,28 @@ private fun ChatTile(
 private fun BottomNavBar(
     selectedIndex: Int,
     totalUnreadCount: Int,
+    profilePhotoPath: String?,
     onTabSelected: (Int) -> Unit
 ) {
     Surface(
         modifier = Modifier
+            .widthIn(max = 380.dp)
             .fillMaxWidth()
-            .height(68.dp),
-        shape = RoundedCornerShape(32.dp),
-        color = Color(0xFF1E2025).copy(alpha = 0.85f),
+            .height(58.dp),
+        shape = CircleShape,
+        color = Color(0xFF141518).copy(alpha = 0.9f),
         border = BorderStroke(1.dp, Color.White.copy(alpha = 0.08f)),
         tonalElevation = 8.dp
     ) {
         Row(
-            modifier = Modifier.fillMaxSize(),
-            horizontalArrangement = Arrangement.SpaceAround,
+            modifier = Modifier
+                .padding(horizontal = 6.dp)
+                .fillMaxSize(),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             NavItem(
+                modifier = Modifier.weight(1f),
                 index = 0,
                 selectedIndex = selectedIndex,
                 label = "Chats",
@@ -290,6 +332,7 @@ private fun BottomNavBar(
                 )
             }
             NavItem(
+                modifier = Modifier.weight(1f),
                 index = 1,
                 selectedIndex = selectedIndex,
                 label = "Moments",
@@ -309,32 +352,55 @@ private fun BottomNavBar(
                 )
             }
             NavItem(
+                modifier = Modifier.weight(1f),
                 index = 2,
                 selectedIndex = selectedIndex,
                 label = "Calls",
                 badgeCount = 0,
                 onTap = onTabSelected
             ) { tint ->
+                val callsIcon = if (selectedIndex == 2) {
+                    com.subhankar.aurachat.R.drawable.ic_calls_filled
+                } else {
+                    com.subhankar.aurachat.R.drawable.ic_calls_outlined
+                }
                 Icon(
-                    imageVector = if (selectedIndex == 2) Icons.Filled.Phone else Icons.Outlined.Phone,
+                    painter = painterResource(id = callsIcon),
                     contentDescription = "Calls",
                     tint = tint,
                     modifier = Modifier.size(24.dp)
                 )
             }
             NavItem(
+                modifier = Modifier.weight(1f),
                 index = 3,
                 selectedIndex = selectedIndex,
                 label = "Profile",
                 badgeCount = 0,
                 onTap = onTabSelected
             ) { tint ->
-                Icon(
-                    imageVector = if (selectedIndex == 3) Icons.Filled.Person else Icons.Outlined.Person,
-                    contentDescription = "Profile",
-                    tint = tint,
-                    modifier = Modifier.size(24.dp)
-                )
+                if (profilePhotoPath != null) {
+                    AsyncImage(
+                        model = profilePhotoPath,
+                        contentDescription = "Profile",
+                        modifier = Modifier
+                            .size(24.dp)
+                            .clip(CircleShape)
+                            .border(
+                                width = 1.dp,
+                                color = if (selectedIndex == 3) Color(0xFF2C6BED) else Color.White.copy(alpha = 0.4f),
+                                shape = CircleShape
+                            ),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Icon(
+                        imageVector = if (selectedIndex == 3) Icons.Filled.Person else Icons.Outlined.Person,
+                        contentDescription = "Profile",
+                        tint = tint,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
             }
         }
     }
@@ -342,6 +408,7 @@ private fun BottomNavBar(
 
 @Composable
 private fun NavItem(
+    modifier: Modifier = Modifier,
     index: Int,
     selectedIndex: Int,
     label: String,
@@ -350,61 +417,85 @@ private fun NavItem(
     icon: @Composable (tint: Color) -> Unit
 ) {
     val isSelected = index == selectedIndex
-    val iconColor by animateColorAsState(
-        targetValue = if (isSelected) AuraColors.Primary else AuraColors.TextTertiary,
-        animationSpec = tween(200), label = "navIconColor"
-    )
-    val bgColor by animateColorAsState(
-        targetValue = if (isSelected) AuraColors.Primary.copy(alpha = 0.15f) else Color.Transparent,
-        animationSpec = tween(200), label = "navBgColor"
-    )
+    val iconColor = if (isSelected) Color(0xFF2C6BED) else Color.White.copy(alpha = 0.5f)
+    val textColor = if (isSelected) Color(0xFF2C6BED) else Color.White
+    val bgColor = if (isSelected) Color(0xFF2C6BED).copy(alpha = 0.12f) else Color.Transparent
     val interactionSource = remember { MutableInteractionSource() }
 
     Column(
-        modifier = Modifier
+        modifier = modifier
+            .height(48.dp) 
+            .clip(CircleShape)
+            .background(bgColor)
             .clickable(
                 interactionSource = interactionSource,
                 indication = null
             ) { onTap(index) }
-            .padding(horizontal = 8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .padding(top = 4.dp, bottom = 0.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
-        Spacer(Modifier.height(4.dp))
         Box(
-            modifier = Modifier
-                .clip(RoundedCornerShape(18.dp))
-                .background(bgColor)
-                .indication(interactionSource, LocalIndication.current)
-                .padding(horizontal = 16.dp, vertical = 4.dp)
+            contentAlignment = Alignment.Center
         ) {
             icon(iconColor)
             if (badgeCount > 0) {
                 Box(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
-                        .offset(x = 8.dp, y = (-4).dp)
-                        .background(Color(0xFF2C6BED), CircleShape)
-                        .padding(horizontal = 5.dp, vertical = 1.dp)
+                        .offset(x = 7.dp, y = (-2.5).dp)
+                        .size(16.5.dp)
+                        .background(Color(0xFF141518), CircleShape),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = badgeCount.toString(),
-                        color = Color.White,
-                        fontSize = 9.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Box(
+                        modifier = Modifier
+                            .size(14.5.dp)
+                            .background(Color(0xFF2C6BED), CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = badgeCount.toString(),
+                            color = Color.White,
+                            fontSize = 8.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = RobotoFontFamily,
+                            style = TextStyle(
+                                platformStyle = PlatformTextStyle(
+                                    includeFontPadding = false
+                                ),
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                            )
+                        )
+                    }
                 }
             }
         }
-        Spacer(Modifier.height(2.dp))
         Text(
-            label,
-            color = iconColor,
-            fontSize = 10.sp,
-            fontWeight = if (isSelected) FontWeight.W600 else FontWeight.W400
+            text = label,
+            color = textColor,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Bold,
+            fontFamily = RobotoFontFamily,
+            style = LocalTextStyle.current.copy(
+                fontFamily = RobotoFontFamily,
+                platformStyle = PlatformTextStyle(
+                    includeFontPadding = false
+                )
+            ),
+            modifier = Modifier
+                .wrapContentHeight(unbounded = true)
+                .offset(y = (-3).dp)
         )
-        Spacer(Modifier.height(4.dp))
     }
 }
+
+private val RobotoFontFamily = FontFamily(
+    Font(com.subhankar.aurachat.R.font.roboto_regular, FontWeight.Normal),
+    Font(com.subhankar.aurachat.R.font.roboto_medium, FontWeight.Medium),
+    Font(com.subhankar.aurachat.R.font.roboto_medium, FontWeight.SemiBold),
+    Font(com.subhankar.aurachat.R.font.roboto_bold, FontWeight.Bold)
+)
 
 // ─── Utilities ───────────────────────────────────────────────────
 

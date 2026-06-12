@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.AuraChat" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.AuraChat" parent="Theme.AppCompat.NoActionBar">
+        <!-- Normal/Unselected icon colors (e.g. unselected emoji categories) -->
+        <item name="colorControlNormal">#8AFFFFFF</item>
+        <!-- Activated/Selected icon and widget colors -->
+        <item name="colorAccent">#C3C0FF</item>
+        <item name="colorControlActivated">#C3C0FF</item>
+    </style>
 </resources>

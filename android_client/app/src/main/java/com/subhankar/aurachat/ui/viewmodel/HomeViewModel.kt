@@ -8,6 +8,7 @@ import com.subhankar.aurachat.service.ChatRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -27,6 +28,21 @@ class HomeViewModel @Inject constructor(
 
     val conversations: StateFlow<List<ConversationEntity>> =
         conversationDao.getAllConversations()
+            .map { list ->
+                val dummy = ConversationEntity(
+                    userId = "dummy_user_123",
+                    name = "AuraChat Assistant",
+                    avatarUrl = null,
+                    lastMessage = "Welcome to AuraChat! Tap to open the chat screen.",
+                    lastMessageTime = java.time.Instant.now().toString(),
+                    unreadCount = 1
+                )
+                if (list.any { it.userId == "dummy_user_123" }) {
+                    list
+                } else {
+                    listOf(dummy) + list
+                }
+            }
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(5_000),

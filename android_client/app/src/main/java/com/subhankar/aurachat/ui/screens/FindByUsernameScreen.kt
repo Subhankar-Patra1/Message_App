@@ -16,6 +16,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.zIndex
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -23,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.subhankar.aurachat.ui.viewmodel.FindByUsernameViewModel
+import com.subhankar.aurachat.ui.theme.AuraColors
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -55,12 +57,14 @@ fun FindByUsernameScreen(
     }
 
     Scaffold(
-        containerColor = Color(0xFF111318),
+        modifier = Modifier.fillMaxSize().zIndex(2f),
+        containerColor = AuraColors.Background,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
                 title = { Text("Find by username", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Normal) },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF111318),
+                    containerColor = AuraColors.AppBarBackground,
                     navigationIconContentColor = Color.White
                 ),
                 navigationIcon = {

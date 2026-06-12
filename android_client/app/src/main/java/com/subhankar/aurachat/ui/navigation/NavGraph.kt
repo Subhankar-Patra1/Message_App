@@ -6,9 +6,43 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.Lifecycle
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.core.tween
+import androidx.compose.ui.Modifier
+import androidx.compose.foundation.background
+import com.subhankar.aurachat.ui.theme.AuraColors
 import com.subhankar.aurachat.data.local.SessionManager
 import com.subhankar.aurachat.ui.screens.*
 import com.subhankar.aurachat.ui.viewmodel.*
@@ -51,7 +85,26 @@ fun AuraChatNavGraph(
 
     NavHost(
         navController = navController,
-        startDestination = startDestination
+        startDestination = startDestination,
+        modifier = Modifier.background(AuraColors.Background),
+        enterTransition = {
+            slideIntoContainer(
+                AnimatedContentTransitionScope.SlideDirection.Left,
+                animationSpec = tween(220)
+            )
+        },
+        exitTransition = {
+            ExitTransition.None
+        },
+        popEnterTransition = {
+            EnterTransition.None
+        },
+        popExitTransition = {
+            slideOutOfContainer(
+                AnimatedContentTransitionScope.SlideDirection.Right,
+                animationSpec = tween(220)
+            )
+        }
     ) {
         // ─── Welcome Screen ──────────────────────────────────
         composable(Routes.WELCOME) {
@@ -163,17 +216,44 @@ fun AuraChatNavGraph(
                 viewModel.initialize()
             }
 
+            var profilePhotoPath by remember { mutableStateOf(sessionManager.getProfilePhotoPath()) }
+            val lifecycleOwner = LocalLifecycleOwner.current
+            DisposableEffect(lifecycleOwner) {
+                val observer = LifecycleEventObserver { _, event ->
+                    if (event == Lifecycle.Event.ON_RESUME) {
+                        profilePhotoPath = sessionManager.getProfilePhotoPath()
+                    }
+                }
+                lifecycleOwner.lifecycle.addObserver(observer)
+                onDispose {
+                    lifecycleOwner.lifecycle.removeObserver(observer)
+                }
+            }
+
             HomeScreen(
                 conversations = conversations,
+                profilePhotoPath = profilePhotoPath,
                 onChatClick = { chat ->
                     viewModel.markAsRead(chat.userId)
-                    navController.navigate(Routes.chat(chat.userId, chat.name))
+                    if (navController.currentDestination?.route == Routes.HOME) {
+                        navController.navigate(Routes.chat(chat.userId, chat.name)) {
+                            launchSingleTop = true
+                        }
+                    }
                 },
                 onNewChatClick = {
-                    navController.navigate(Routes.NEW_CHAT)
+                    if (navController.currentDestination?.route == Routes.HOME) {
+                        navController.navigate(Routes.NEW_CHAT) {
+                            launchSingleTop = true
+                        }
+                    }
                 },
                 onProfileClick = {
-                    navController.navigate(Routes.PROFILE)
+                    if (navController.currentDestination?.route == Routes.HOME) {
+                        navController.navigate(Routes.PROFILE) {
+                            launchSingleTop = true
+                        }
+                    }
                 }
             )
         }
@@ -213,8 +293,16 @@ fun AuraChatNavGraph(
         composable(Routes.NEW_CHAT) {
             NewChatScreen(
                 onBackClick = { navController.popBackStack() },
-                onFindByUsername = { navController.navigate(Routes.FIND_BY_USERNAME) },
-                onFindByIdentifier = { navController.navigate(Routes.FIND_BY_IDENTIFIER) }
+                onFindByUsername = {
+                    if (navController.currentDestination?.route == Routes.NEW_CHAT) {
+                        navController.navigate(Routes.FIND_BY_USERNAME)
+                    }
+                },
+                onFindByIdentifier = {
+                    if (navController.currentDestination?.route == Routes.NEW_CHAT) {
+                        navController.navigate(Routes.FIND_BY_IDENTIFIER)
+                    }
+                }
             )
         }
 
@@ -223,8 +311,10 @@ fun AuraChatNavGraph(
             FindByUsernameScreen(
                 onBackClick = { navController.popBackStack() },
                 onNavigateToChat = { recipientId, recipientName ->
-                    navController.navigate(Routes.chat(recipientId, recipientName)) {
-                        popUpTo(Routes.NEW_CHAT) { inclusive = true }
+                    if (navController.currentDestination?.route == Routes.FIND_BY_USERNAME) {
+                        navController.navigate(Routes.chat(recipientId, recipientName)) {
+                            popUpTo(Routes.NEW_CHAT) { inclusive = true }
+                        }
                     }
                 }
             )
@@ -235,8 +325,10 @@ fun AuraChatNavGraph(
             FindByIdentifierScreen(
                 onBackClick = { navController.popBackStack() },
                 onNavigateToChat = { recipientId, recipientName ->
-                    navController.navigate(Routes.chat(recipientId, recipientName)) {
-                        popUpTo(Routes.NEW_CHAT) { inclusive = true }
+                    if (navController.currentDestination?.route == Routes.FIND_BY_IDENTIFIER) {
+                        navController.navigate(Routes.chat(recipientId, recipientName)) {
+                            popUpTo(Routes.NEW_CHAT) { inclusive = true }
+                        }
                     }
                 }
             )

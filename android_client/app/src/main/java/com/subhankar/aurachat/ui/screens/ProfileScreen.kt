@@ -49,6 +49,7 @@ import java.io.FileOutputStream
 import kotlin.coroutines.suspendCoroutine
 import kotlin.coroutines.resume
 import androidx.compose.ui.draw.blur
+import androidx.compose.ui.zIndex
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
@@ -269,7 +270,9 @@ fun ProfileScreen(
     }
 
     Scaffold(
-        containerColor = AuraColors.Background
+        modifier = Modifier.fillMaxSize().zIndex(2f),
+        containerColor = AuraColors.Background,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0)
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize()) {
             when {
@@ -1122,7 +1125,9 @@ fun ProfileScreen(
 
                     // Card 1: Your name
                     Card(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(20.dp)),
                         shape = RoundedCornerShape(20.dp),
                         colors = CardDefaults.cardColors(containerColor = cardBgColor)
                     ) {
@@ -1197,7 +1202,9 @@ fun ProfileScreen(
 
                     // Card 2: Bio
                     Card(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(20.dp)),
                         shape = RoundedCornerShape(20.dp),
                         colors = CardDefaults.cardColors(containerColor = cardBgColor)
                     ) {
@@ -1245,17 +1252,20 @@ fun ProfileScreen(
 
                     // Card 3: Your Info
                     Card(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(20.dp)),
                         shape = RoundedCornerShape(20.dp),
                         colors = CardDefaults.cardColors(containerColor = cardBgColor)
                     ) {
-                        Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp)) {
+                        Column(modifier = Modifier.padding(top = 10.dp)) {
                             Text(
                                 text = "Your Info",
                                 color = AuraColors.Primary,
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.SemiBold,
-                                fontFamily = FontFamily.SansSerif
+                                fontFamily = FontFamily.SansSerif,
+                                modifier = Modifier.padding(horizontal = 20.dp)
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             
@@ -1263,6 +1273,7 @@ fun ProfileScreen(
                                 title = if (phone.isNotEmpty()) phone else "+91 8609351025",
                                 subtext = "Tap to change phone number",
                                 onClick = { activeDialog = ProfileDialogType.PHONE },
+                                modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
                                 leading = {
                                     Icon(
                                         painter = painterResource(id = com.subhankar.aurachat.R.drawable.ic_profile_call),
@@ -1277,6 +1288,7 @@ fun ProfileScreen(
                                 title = if (currentUsername.isNotEmpty()) "@$currentUsername" else "Set Username",
                                 subtext = if (currentUsername.isNotEmpty()) "Username" else null,
                                 onClick = { showUsernameEditScreen = true },
+                                modifier = Modifier.padding(horizontal = 20.dp, vertical = if (currentUsername.isNotEmpty()) 8.dp else 14.dp),
                                 leading = {
                                     Icon(
                                         painter = painterResource(id = com.subhankar.aurachat.R.drawable.ic_profile_username),
@@ -1291,6 +1303,12 @@ fun ProfileScreen(
                                 title = if (birthday.isNotEmpty()) birthday else "Add Birthday",
                                 subtext = if (birthday.isNotEmpty()) "Birthday" else null,
                                 onClick = { activeDialog = ProfileDialogType.BIRTHDAY },
+                                modifier = Modifier.padding(
+                                    start = 20.dp,
+                                    end = 20.dp,
+                                    top = if (birthday.isNotEmpty()) 8.dp else 14.dp,
+                                    bottom = 18.dp
+                                ),
                                 leading = {
                                     Icon(
                                         painter = painterResource(id = com.subhankar.aurachat.R.drawable.ic_profile_birthday),
@@ -1307,18 +1325,20 @@ fun ProfileScreen(
 
                     // Card 4: QR Code
                     Card(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(20.dp)),
                         shape = RoundedCornerShape(20.dp),
                         colors = CardDefaults.cardColors(containerColor = cardBgColor)
                     ) {
-                        Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp)) {
+                        Column {
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clickable {
                                         Toast.makeText(context, "QR code coming soon!", Toast.LENGTH_SHORT).show()
                                     }
-                                    .padding(vertical = 8.dp),
+                                    .padding(start = 20.dp, end = 20.dp, top = 18.dp, bottom = 8.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Icon(
@@ -1337,7 +1357,10 @@ fun ProfileScreen(
                             }
                             
                             Spacer(modifier = Modifier.height(4.dp))
-                            DashedDivider(color = Color.White.copy(alpha = 0.2f))
+                            DashedDivider(
+                                color = Color.White.copy(alpha = 0.2f),
+                                modifier = Modifier.padding(horizontal = 20.dp)
+                            )
                             Spacer(modifier = Modifier.height(4.dp))
                             
                             Row(
@@ -1346,7 +1369,7 @@ fun ProfileScreen(
                                     .clickable {
                                         Toast.makeText(context, "Links coming soon!", Toast.LENGTH_SHORT).show()
                                     }
-                                    .padding(vertical = 8.dp),
+                                    .padding(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 18.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Icon(
@@ -1370,16 +1393,19 @@ fun ProfileScreen(
 
                     // Card 5: Actions
                     Card(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(20.dp)),
                         shape = RoundedCornerShape(20.dp),
                         colors = CardDefaults.cardColors(containerColor = cardBgColor)
                     ) {
-                        Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp)) {
+                        Column {
                             ActionItem(
                                 text = "Add Account",
                                 onClick = {
                                     Toast.makeText(context, "Multi-account support is coming soon!", Toast.LENGTH_SHORT).show()
                                 },
+                                modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 18.dp, bottom = 8.dp),
                                 leading = {
                                     Icon(
                                         painter = painterResource(id = com.subhankar.aurachat.R.drawable.ic_profile_add_account),
@@ -1395,6 +1421,7 @@ fun ProfileScreen(
                             ActionItem(
                                 text = "Logout",
                                 onClick = onLogoutClick,
+                                modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 18.dp),
                                 leading = {
                                     Icon(
                                         painter = painterResource(id = com.subhankar.aurachat.R.drawable.ic_profile_logout),
@@ -2634,13 +2661,23 @@ fun InfoItem(
     title: String,
     subtext: String?,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
     leading: @Composable () -> Unit = { InfoIconBox() }
 ) {
+    val finalModifier = remember(subtext, modifier) {
+        if (modifier == Modifier) {
+            Modifier
+                .padding(horizontal = 20.dp)
+                .padding(vertical = if (subtext == null) 14.dp else 8.dp)
+        } else {
+            modifier
+        }
+    }
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(vertical = if (subtext == null) 14.dp else 8.dp),
+            .then(finalModifier),
         verticalAlignment = Alignment.CenterVertically
     ) {
         leading()
@@ -2701,14 +2738,22 @@ fun ActionIconCircle() {
 fun ActionItem(
     text: String,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
     leading: @Composable () -> Unit = { ActionIconCircle() },
     textColor: Color = Color.White
 ) {
+    val finalModifier = remember(modifier) {
+        if (modifier == Modifier) {
+            Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
+        } else {
+            modifier
+        }
+    }
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(vertical = 8.dp),
+            .then(finalModifier),
         verticalAlignment = Alignment.CenterVertically
     ) {
         leading()
