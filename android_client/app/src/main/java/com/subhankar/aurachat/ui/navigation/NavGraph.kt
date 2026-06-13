@@ -275,6 +275,7 @@ fun AuraChatNavGraph(
             val lastSeenAt by viewModel.lastSeenAt.collectAsState()
             val inputText by viewModel.inputText.collectAsState()
 
+            val context = LocalContext.current
             ChatScreen(
                 recipientName = recipientName,
                 recipientAvatar = null,
@@ -285,7 +286,12 @@ fun AuraChatNavGraph(
                 inputText = inputText,
                 onInputChange = { viewModel.updateInput(it) },
                 onSendClick = { viewModel.sendMessage() },
-                onBackClick = { navController.popBackStack() }
+                onBackClick = { navController.popBackStack() },
+                onSendMedia = { uris ->
+                    uris.forEach { uri ->
+                        viewModel.sendMediaMessage(uri, context)
+                    }
+                }
             )
         }
 

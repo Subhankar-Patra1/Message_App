@@ -29,9 +29,20 @@ class BackdropBlurView @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr) {
 
+    companion object {
+        var isCapturing = false
+    }
+
     private var blurRadius = 15f
     private var downsampleFactor = 4f
     private var overlayColor = Color.parseColor("#1A111318") // 10% dark overlay
+    var customTranslationY: Float = 0f
+        set(value) {
+            if (field != value) {
+                field = value
+                invalidate()
+            }
+        }
 
     private var mBitmapToBlur: Bitmap? = null
     private var mBlurredBitmap: Bitmap? = null
@@ -96,6 +107,14 @@ class BackdropBlurView @JvmOverloads constructor(
     fun setOverlayColor(color: Int) {
         if (this.overlayColor != color) {
             this.overlayColor = color
+            invalidate()
+        }
+    }
+
+    fun setPaintAlpha(alpha: Float) {
+        val clampedAlpha = (alpha.coerceIn(0f, 1f) * 255).toInt()
+        if (mPaint.alpha != clampedAlpha) {
+            mPaint.alpha = clampedAlpha
             invalidate()
         }
     }
@@ -177,10 +196,12 @@ class BackdropBlurView @JvmOverloads constructor(
         mBlurringCanvas?.translate(-relativeX.toFloat(), -relativeY.toFloat())
 
         try {
+            isCapturing = true
             decor.draw(mBlurringCanvas!!)
         } catch (e: Exception) {
             // Ignore drawing exceptions during system transitions
         } finally {
+            isCapturing = false
             mBlurringCanvas?.restoreToCount(saveCount)
             mIsBlurring = false
         }
@@ -448,7 +469,9 @@ fun BackdropBlur(
     modifier: Modifier = Modifier,
     blurRadius: Float = 15f,
     downsampleFactor: Float = 4f,
-    overlayColor: Int = Color.parseColor("#12111318") // very subtle dark tint (~7% opacity)
+    overlayColor: Int = Color.parseColor("#12111318"), // very subtle dark tint (~7% opacity)
+    customTranslationY: Float = 0f,
+    backgroundAlpha: Float = 1.0f
 ) {
     AndroidView(
         factory = { context ->
@@ -456,12 +479,16 @@ fun BackdropBlur(
                 setBlurRadius(blurRadius)
                 setDownsampleFactor(downsampleFactor)
                 setOverlayColor(overlayColor)
+                this.customTranslationY = customTranslationY
+                setPaintAlpha(backgroundAlpha)
             }
         },
         update = { view ->
             view.setBlurRadius(blurRadius)
             view.setDownsampleFactor(downsampleFactor)
             view.setOverlayColor(overlayColor)
+            view.customTranslationY = customTranslationY
+            view.setPaintAlpha(backgroundAlpha)
         },
         modifier = modifier
     )

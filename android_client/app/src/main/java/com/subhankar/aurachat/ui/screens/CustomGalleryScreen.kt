@@ -63,6 +63,13 @@ import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import kotlin.math.roundToInt
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.geometry.Offset
 
 data class GalleryImage(
     val uri: Uri,
@@ -179,6 +186,7 @@ fun CustomGalleryScreen(
     LaunchedEffect(permissionsGranted) {
         if (permissionsGranted) {
             isLoading = true
+            delay(350)
             withContext(Dispatchers.IO) {
                 val queriedAlbums = queryMediaStoreImages(context)
                 withContext(Dispatchers.Main) {
@@ -294,7 +302,55 @@ fun CustomGalleryScreen(
         ) {
             when {
                 isLoading -> {
-                    CircularProgressIndicator(color = AuraColors.Primary)
+                    val transition = rememberInfiniteTransition(label = "shimmer")
+                    val translateAnim by transition.animateFloat(
+                        initialValue = 0f,
+                        targetValue = 1000f,
+                        animationSpec = infiniteRepeatable(
+                            animation = tween(durationMillis = 1200, easing = LinearEasing),
+                            repeatMode = RepeatMode.Restart
+                        ),
+                        label = "shimmer_translate"
+                    )
+
+                    val shimmerColors = listOf(
+                        Color(0xFF22242A),
+                        Color(0xFF2D3139),
+                        Color(0xFF22242A)
+                    )
+
+                    val brush = Brush.linearGradient(
+                        colors = shimmerColors,
+                        start = Offset(translateAnim - 300f, translateAnim - 300f),
+                        end = Offset(translateAnim, translateAnim)
+                    )
+
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(3),
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(2.dp),
+                        horizontalArrangement = Arrangement.spacedBy(2.dp),
+                        verticalArrangement = Arrangement.spacedBy(2.dp),
+                        userScrollEnabled = false
+                    ) {
+                        items(30) { index ->
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .aspectRatio(1f)
+                                    .clip(RoundedCornerShape(4.dp))
+                                    .background(brush = brush),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = com.subhankar.aurachat.R.drawable.ic_placeholder_photo),
+                                    contentDescription = null,
+                                    tint = Color.White.copy(alpha = 0.08f),
+                                    modifier = Modifier.size(32.dp)
+                                )
+                            }
+                        }
+                    }
                 }
                 selectedAlbum == null || selectedAlbum!!.images.isEmpty() -> {
                     Text(

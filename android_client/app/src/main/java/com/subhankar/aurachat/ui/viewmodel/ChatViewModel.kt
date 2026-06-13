@@ -108,4 +108,45 @@ class ChatViewModel @Inject constructor(
         receiptService.sendReadReceipt(recipientId, msgId)
         receiptService.sendReadCursor(recipientId, seq)
     }
+
+    fun sendMediaMessage(uri: android.net.Uri, context: android.content.Context) {
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            val name = getFileName(context, uri)
+            val size = getFileSize(context, uri)
+            val mime = context.contentResolver.getType(uri) ?: ""
+            val text = "aura://file?uri=${android.net.Uri.encode(uri.toString())}&name=${android.net.Uri.encode(name)}&size=$size&mime=${android.net.Uri.encode(mime)}"
+            chatRepository.sendMessage(recipientId, text)
+        }
+    }
+
+    private fun getFileName(context: android.content.Context, uri: android.net.Uri): String {
+        var name = "Unknown File"
+        try {
+            context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+                val nameIndex = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+                if (cursor.moveToFirst() && nameIndex != -1) {
+                    name = cursor.getString(nameIndex) ?: name
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return name
+    }
+
+    private fun getFileSize(context: android.content.Context, uri: android.net.Uri): Long {
+        var size = 0L
+        try {
+            context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+                val sizeIndex = cursor.getColumnIndex(android.provider.OpenableColumns.SIZE)
+                if (cursor.moveToFirst() && sizeIndex != -1) {
+                    size = cursor.getLong(sizeIndex)
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return size
+    }
 }
+

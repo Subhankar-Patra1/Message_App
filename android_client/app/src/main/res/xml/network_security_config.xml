@@ -13,7 +13,7 @@
     <!-- Allow cleartext to local dev server only -->
     <domain-config cleartextTrafficPermitted="true">
         <domain includeSubdomains="true">192.168.2.69</domain>
-        <domain includeSubdomains="true">10.75.72.109</domain>
+        <domain includeSubdomains="true">10.146.100.109</domain>
         <domain includeSubdomains="true">10.0.2.2</domain>  <!-- Android emulator localhost -->
         <domain includeSubdomains="true">localhost</domain>
     </domain-config>

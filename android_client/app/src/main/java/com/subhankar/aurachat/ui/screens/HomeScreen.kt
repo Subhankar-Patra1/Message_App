@@ -30,9 +30,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.zIndex
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.toArgb
+import com.subhankar.aurachat.ui.components.BackdropBlur
+import com.subhankar.aurachat.ui.components.BackdropBlurView
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.font.FontFamily
@@ -65,6 +70,36 @@ fun HomeScreen(
     onProfileClick: () -> Unit
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
+
+    val displayConversations = remember(conversations) {
+        val demoList = listOf(
+            ConversationEntity("demo_1", "Alice Smith", null, "Hey! Are we still on for lunch?", "2026-06-12T11:00:00Z", 2),
+            ConversationEntity("demo_2", "Bob Johnson", null, "I've sent over the report.", "2026-06-12T10:45:00Z", 0),
+            ConversationEntity("demo_3", "Charlie Brown", null, "Can you review this code?", "2026-06-12T09:30:00Z", 1),
+            ConversationEntity("demo_4", "David Miller", null, "Great job on the release!", "2026-06-12T08:15:00Z", 0),
+            ConversationEntity("demo_5", "Emma Watson", null, "See you at the conference.", "2026-06-12T07:00:00Z", 0),
+            ConversationEntity("demo_6", "Frank Castle", null, "Done. Talk to you later.", "2026-06-11T22:00:00Z", 0),
+            ConversationEntity("demo_7", "Grace Hopper", null, "The bug has been fixed.", "2026-06-11T20:30:00Z", 0),
+            ConversationEntity("demo_8", "Harry Potter", null, "Meet me in the common room.", "2026-06-11T18:00:00Z", 5),
+            ConversationEntity("demo_9", "Isabella Ross", null, "Let's catch up tomorrow.", "2026-06-11T15:45:00Z", 0),
+            ConversationEntity("demo_10", "Jack Sparrow", null, "Where is the rum?", "2026-06-11T12:00:00Z", 10),
+            ConversationEntity("demo_11", "Karen White", null, "Thanks for your help!", "2026-06-11T09:00:00Z", 0),
+            ConversationEntity("demo_12", "Leo Carter", null, "Let me know when you're free.", "2026-06-10T19:20:00Z", 0),
+            ConversationEntity("demo_13", "Mia Wallace", null, "I want to dance.", "2026-06-10T16:15:00Z", 0),
+            ConversationEntity("demo_14", "Nathan Drake", null, "I found another clue!", "2026-06-10T12:30:00Z", 0),
+            ConversationEntity("demo_15", "Olivia Wilde", null, "Are you attending the presentation?", "2026-06-10T10:00:00Z", 0),
+            ConversationEntity("demo_16", "Peter Parker", null, "Sorry, I'm going to be late.", "2026-06-10T08:45:00Z", 1),
+            ConversationEntity("demo_17", "Quentin Tarantino", null, "Let's make a movie.", "2026-06-09T23:30:00Z", 0),
+            ConversationEntity("demo_18", "Rachel Green", null, "How are you doing?", "2026-06-09T20:15:00Z", 0),
+            ConversationEntity("demo_19", "Steve Rogers", null, "I can do this all day.", "2026-06-09T17:00:00Z", 3),
+            ConversationEntity("demo_20", "Tony Stark", null, "I am Iron Man.", "2026-06-09T14:45:00Z", 0)
+        )
+        if (conversations.size < 20) {
+            conversations + demoList.take(20 - conversations.size)
+        } else {
+            conversations
+        }
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize().zIndex(1f),
@@ -127,7 +162,7 @@ fun HomeScreen(
             ) {
                 BottomNavBar(
                     selectedIndex = selectedTab,
-                    totalUnreadCount = conversations.sumOf { it.unreadCount },
+                    totalUnreadCount = displayConversations.sumOf { it.unreadCount },
                     profilePhotoPath = profilePhotoPath,
                     onTabSelected = { index ->
                         if (index == 3) onProfileClick()
@@ -137,7 +172,7 @@ fun HomeScreen(
             }
         }
     ) { paddingValues ->
-        if (conversations.isEmpty()) {
+        if (displayConversations.isEmpty()) {
             // Empty state — matching Flutter
             Box(
                 modifier = Modifier
@@ -168,14 +203,14 @@ fun HomeScreen(
                     bottom = 100.dp
                 )
             ) {
-                itemsIndexed(conversations) { index, chat ->
+                itemsIndexed(displayConversations) { index, chat ->
                     ChatTile(
                         conversation = chat,
                         avatarColor = AuraColors.AvatarColors[index % AuraColors.AvatarColors.size],
                         onClick = { onChatClick(chat) }
                     )
                     // Divider with left padding (matching Flutter's left: 76)
-                    if (index < conversations.lastIndex) {
+                    if (index < displayConversations.lastIndex) {
                         HorizontalDivider(
                             modifier = Modifier.padding(start = 76.dp, end = 16.dp),
                             thickness = 1.dp,
@@ -305,17 +340,27 @@ private fun BottomNavBar(
             .fillMaxWidth()
             .height(58.dp),
         shape = CircleShape,
-        color = Color(0xFF141518).copy(alpha = 0.9f),
+        color = Color.Transparent,
         border = BorderStroke(1.dp, Color.White.copy(alpha = 0.08f)),
-        tonalElevation = 8.dp
+        tonalElevation = 0.dp
     ) {
-        Row(
-            modifier = Modifier
-                .padding(horizontal = 6.dp)
-                .fillMaxSize(),
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        Box(modifier = Modifier.fillMaxSize().clip(CircleShape)) {
+            BackdropBlur(
+                modifier = Modifier.matchParentSize(),
+                overlayColor = Color(0xFF141518).copy(alpha = 0.5f).toArgb()
+            )
+            Row(
+                modifier = Modifier
+                    .padding(horizontal = 6.dp)
+                    .fillMaxSize()
+                    .drawWithContent {
+                        if (!BackdropBlurView.isCapturing) {
+                            drawContent()
+                        }
+                    },
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
             NavItem(
                 modifier = Modifier.weight(1f),
                 index = 0,
@@ -402,6 +447,7 @@ private fun BottomNavBar(
                     )
                 }
             }
+        }
         }
     }
 }
